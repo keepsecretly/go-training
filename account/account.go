@@ -1,13 +1,18 @@
 package account
 
-import mgo "gopkg.in/mgo.v2"
+import (
+	"os"
+
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+)
 
 type Account struct {
-	ID            int    `json:"id"`
-	UserID        int    `json:"user_id"`
-	AccountNumber string `json:"account_number" binding:"required"`
-	Name          string `json:"name" binding:"required"`
-	Balance       int    `json:"balance"`
+	ID            int    `bson:"id" json:"id"`
+	UserID        int    `bson:"user_id" json:"user_id"`
+	AccountNumber string `bson:"account_number" json:"account_number" binding:"required"`
+	Name          string `bson:"name" json:"name" binding:"required"`
+	Balance       int    `bson:"balance" json:"balance"`
 }
 
 type AccountService interface {
@@ -20,12 +25,24 @@ type AccountService interface {
 }
 
 type AccountServiceImp struct {
-	collection *mgo.Collection
+	Session *mgo.Session
 }
 
 func (s *AccountServiceImp) All(user int) ([]Account, error) {
-	accs := []Account{}
-	return accs, nil
+	sess, err := mgo.Dial(os.Getenv("MLAB_URI"))
+	if err != nil {
+		return nil, err
+	}
+	defer sess.Close()
+
+	c := sess.DB("go-training-account").C("Account")
+	var results []Account
+	err = c.Find(bson.M{"user_id": user}).All(&results)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 func (s *AccountServiceImp) New(user int, account Account) error {
