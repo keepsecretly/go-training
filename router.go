@@ -74,7 +74,10 @@ func (r *Router) addUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Successful",
+	})
+
 }
 
 func (r *Router) updateUser(c *gin.Context) {

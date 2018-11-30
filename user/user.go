@@ -68,13 +68,57 @@ func (s *UserServiceImp) Get(id int) (*User, error) {
 }
 
 func (s *UserServiceImp) New(u User) error {
-	return nil
+	sess, err := mgo.Dial(os.Getenv("MLAB_URI"))
+	if err != nil {
+		return err
+	}
+	defer sess.Close()
+
+	c := sess.DB("go-training-account").C("User")
+
+	if err != nil {
+		return err
+	}
+
+	var result User
+	err = c.Find(nil).Sort("-id").One(&result)
+	u.ID = result.ID + 1
+
+	return c.Insert(u)
 }
 
 func (s *UserServiceImp) Update(u User) (*User, error) {
-	return &User{}, nil
+	sess, err := mgo.Dial(os.Getenv("MLAB_URI"))
+	if err != nil {
+		return nil, err
+	}
+	defer sess.Close()
+
+	c := sess.DB("go-training-account").C("User")
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.Update(bson.M{"id": u.ID}, u)
+
+	return &u, err
 }
 
 func (s *UserServiceImp) Delete(id int) error {
-	return nil
+	sess, err := mgo.Dial(os.Getenv("MLAB_URI"))
+	if err != nil {
+		return err
+	}
+	defer sess.Close()
+
+	c := sess.DB("go-training-account").C("User")
+
+	if err != nil {
+		return err
+	}
+
+	err = c.Remove(bson.M{"id": id})
+
+	return err
 }
