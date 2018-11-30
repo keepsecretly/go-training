@@ -53,7 +53,18 @@ func (r *Router) getUserByID(c *gin.Context) {
 }
 
 func (r *Router) addUser(c *gin.Context) {
-	user, err := r.userService.New()
+	var user user.User
+
+	err := c.ShouldBindJSON(&user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("json: wrong params: %s", err),
+		})
+		return
+	}
+
+	err = r.userService.New(user)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -125,7 +136,18 @@ func (r *Router) addAccount(c *gin.Context) {
 		return
 	}
 
-	account, err := r.accountService.New(userID)
+	var account account.Account
+
+	err = c.ShouldBindJSON(&account)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("json: wrong params: %s", err),
+		})
+		return
+	}
+
+	err = r.accountService.New(userID, account)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -197,7 +219,31 @@ func (r *Router) deposit(c *gin.Context) {
 		return
 	}
 
-	account, err := r.accountService.Deposit(id, 0)
+	h := map[string]string{}
+	if err := c.ShouldBindJSON(&h); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	_, ok := h["amount"]
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": "amount not found",
+		})
+		return
+	}
+
+	amount, err := strconv.Atoi(h["amount"])
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("error: %s", err),
+		})
+		return
+	}
+
+	account, err := r.accountService.Deposit(id, amount)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -220,7 +266,31 @@ func (r *Router) withdraw(c *gin.Context) {
 		return
 	}
 
-	account, err := r.accountService.Withdraw(id, 0)
+	h := map[string]string{}
+	if err := c.ShouldBindJSON(&h); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	_, ok := h["amount"]
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": "amount not found",
+		})
+		return
+	}
+
+	amount, err := strconv.Atoi(h["amount"])
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("error: %s", err),
+		})
+		return
+	}
+
+	account, err := r.accountService.Withdraw(id, amount)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{

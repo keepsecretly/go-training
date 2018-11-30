@@ -22,8 +22,8 @@ func (s *testAccountServiceImp) All(user int) ([]account.Account, error) {
 	return accs, nil
 }
 
-func (s *testAccountServiceImp) New(user int) (*account.Account, error) {
-	return &account.Account{}, nil
+func (s *testAccountServiceImp) New(user int, account account.Account) error {
+	return nil
 }
 
 func (s *testAccountServiceImp) Deposit(id int, amount int) (*account.Account, error) {
@@ -62,12 +62,8 @@ func (s *testUserServiceImp) Get(id int) (*user.User, error) {
 	}, nil
 }
 
-func (s *testUserServiceImp) New() (*user.User, error) {
-	return &user.User{
-		ID:        2,
-		FirstName: "NiM 2",
-		LastName:  "nim 2",
-	}, nil
+func (s *testUserServiceImp) New(u user.User) error {
+	return nil
 }
 
 func (s *testUserServiceImp) Update(id int) (*user.User, error) {
