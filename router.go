@@ -154,7 +154,6 @@ func (r *Router) deleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"object":  "error",
 		"message": "Successful",
 	})
 }
@@ -237,7 +236,6 @@ func (r *Router) deleteAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"object":  "error",
 		"message": "Successful",
 	})
 }
