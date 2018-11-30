@@ -87,12 +87,45 @@ func (r *Router) updateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := r.userService.Update(id)
+	h := map[string]string{}
+	if err := c.ShouldBindJSON(&h); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
 
+	u, err := r.userService.Get(id)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
 			"message": fmt.Sprintf("db: query error: %s", err),
+		})
+		return
+	}
+
+	firstName, foundFirstName := h["first_name"]
+	lastName, foundLastName := h["last_name"]
+	if !foundFirstName && !foundLastName {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": "name not found",
+		})
+		return
+	}
+
+	if foundFirstName && firstName != "" {
+		u.FirstName = firstName
+	}
+
+	if foundLastName && lastName != "" {
+		u.LastName = lastName
+	}
+
+	user, err := r.userService.Update(*u)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("db: update error: %s", err),
 		})
 		return
 	}
@@ -115,7 +148,7 @@ func (r *Router) deleteUser(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
-			"message": fmt.Sprintf("db: query error: %s", err),
+			"message": fmt.Sprintf("db: delete error: %s", err),
 		})
 		return
 	}
@@ -152,7 +185,7 @@ func (r *Router) addAccount(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
-			"message": fmt.Sprintf("db: query error: %s", err),
+			"message": fmt.Sprintf("db: insert error: %s", err),
 		})
 		return
 	}
@@ -198,7 +231,7 @@ func (r *Router) deleteAccount(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
-			"message": fmt.Sprintf("db: query error: %s", err),
+			"message": fmt.Sprintf("db: delete error: %s", err),
 		})
 		return
 	}
@@ -248,7 +281,7 @@ func (r *Router) deposit(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
-			"message": fmt.Sprintf("db: query error: %s", err),
+			"message": fmt.Sprintf("db: update error: %s", err),
 		})
 		return
 	}
@@ -295,7 +328,7 @@ func (r *Router) withdraw(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
-			"message": fmt.Sprintf("db: query error: %s", err),
+			"message": fmt.Sprintf("db: update error: %s", err),
 		})
 		return
 	}
@@ -366,7 +399,7 @@ func (r *Router) transfer(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
-			"message": fmt.Sprintf("db: query error: %s", err),
+			"message": fmt.Sprintf("db: update error: %s", err),
 		})
 		return
 	}

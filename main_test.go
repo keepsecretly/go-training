@@ -66,7 +66,7 @@ func (s *testUserServiceImp) New(u user.User) error {
 	return nil
 }
 
-func (s *testUserServiceImp) Update(id int) (*user.User, error) {
+func (s *testUserServiceImp) Update(u user.User) (*user.User, error) {
 	return &user.User{
 		ID:        2,
 		FirstName: "NiM 2",

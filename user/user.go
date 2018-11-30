@@ -9,8 +9,8 @@ type User struct {
 type UserService interface {
 	All() ([]User, error)
 	Get(id int) (*User, error)
-	New(user User) error
-	Update(id int) (*User, error)
+	New(u User) error
+	Update(u User) (*User, error)
 	Delete(id int) error
 }
 
@@ -26,11 +26,11 @@ func (s *UserServiceImp) Get(id int) (*User, error) {
 	return &User{}, nil
 }
 
-func (s *UserServiceImp) New(user User) error {
+func (s *UserServiceImp) New(u User) error {
 	return nil
 }
 
-func (s *UserServiceImp) Update(id int) (*User, error) {
+func (s *UserServiceImp) Update(u User) (*User, error) {
 	return &User{}, nil
 }
 
