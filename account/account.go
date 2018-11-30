@@ -14,7 +14,7 @@ type AccountService interface {
 	Deposit(id int, amount int) (*Account, error)
 	Withdraw(id int, amount int) (*Account, error)
 	Delete(id int) error
-	Transfer(fromID int, toID int) (*Account, error)
+	Transfer(fromID int, toID int, amount int) (*Account, error)
 }
 
 type AccountServiceImp struct {
@@ -41,6 +41,6 @@ func (s *AccountServiceImp) Delete(id int) error {
 	return nil
 }
 
-func (s *AccountServiceImp) Transfer(fromID int, toID int) (*Account, error) {
+func (s *AccountServiceImp) Transfer(fromID int, toID int, amount int) (*Account, error) {
 	return &Account{}, nil
 }

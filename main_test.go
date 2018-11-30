@@ -38,7 +38,7 @@ func (s *testAccountServiceImp) Delete(id int) error {
 	return nil
 }
 
-func (s *testAccountServiceImp) Transfer(fromID int, toID int) (*account.Account, error) {
+func (s *testAccountServiceImp) Transfer(fromID int, toID int, amount int) (*account.Account, error) {
 	return &account.Account{}, nil
 }
 

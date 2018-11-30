@@ -303,6 +303,77 @@ func (r *Router) withdraw(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
+func (r *Router) transfer(c *gin.Context) {
+	h := map[string]string{}
+	if err := c.ShouldBindJSON(&h); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	if _, okAmount := h["amount"]; !okAmount {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": "amount not found",
+		})
+		return
+	}
+
+	amount, err := strconv.Atoi(h["amount"])
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("error: %s", err),
+		})
+		return
+	}
+
+	if _, okFrom := h["from"]; !okFrom {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": "account not found",
+		})
+		return
+	}
+
+	from, err := strconv.Atoi(h["from"])
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("error: %s", err),
+		})
+		return
+	}
+
+	if _, okTo := h["to"]; !okTo {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"object":  "error",
+			"message": "account not found",
+		})
+		return
+	}
+
+	to, err := strconv.Atoi(h["to"])
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("error: %s", err),
+		})
+		return
+	}
+
+	account, err := r.accountService.Transfer(from, to, amount)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("db: query error: %s", err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
+}
+
 func setupRouter(r *Router) *gin.Engine {
 	g := gin.Default()
 
