@@ -1,5 +1,7 @@
 package account
 
+import mgo "gopkg.in/mgo.v2"
+
 type Account struct {
 	ID            int    `json:"id"`
 	UserID        int    `json:"user_id"`
@@ -18,6 +20,7 @@ type AccountService interface {
 }
 
 type AccountServiceImp struct {
+	collection *mgo.Collection
 }
 
 func (s *AccountServiceImp) All(user int) ([]Account, error) {
