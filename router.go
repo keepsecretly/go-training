@@ -427,6 +427,10 @@ func (r *Router) AuthRequest(c *gin.Context) {
 
 }
 
+func (r *Router) LogRequest(c *gin.Context) {
+	log.Printf("Requested: %s \t %s", c.Request.Method, c.Request.URL.Path)
+}
+
 func setupRouter(r *Router) *gin.Engine {
 	g := gin.Default()
 
@@ -442,7 +446,7 @@ func setupRouter(r *Router) *gin.Engine {
 
 	a.GET("/generateKey", r.genKey)
 
-	u.Use(r.AuthRequest)
+	u.Use(r.AuthRequest).Use(r.LogRequest)
 	u.GET("/", r.allUser)
 	u.POST("/", r.addUser)
 
@@ -454,7 +458,7 @@ func setupRouter(r *Router) *gin.Engine {
 	u.GET("/:id/bankAccounts/", r.allAccounts)
 	u.POST("/:id/bankAccounts/", r.addAccount)
 
-	b.Use(r.AuthRequest)
+	b.Use(r.AuthRequest).Use(r.LogRequest)
 	b.DELETE("/:id", r.deleteAccount)
 	b.PUT("/:id/deposit", r.deposit)
 	b.POST("/:id/deposit", r.deposit)
