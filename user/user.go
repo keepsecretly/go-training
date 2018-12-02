@@ -25,10 +25,13 @@ type UserServiceImp struct {
 
 // mongodb://testuser:user1234@ds253203.mlab.com:53203/go-training-account
 
+func (s *UserServiceImp) collection() *mgo.Collection {
+	return s.Session.DB("go-training-account").C("User")
+}
+
 func (s *UserServiceImp) All() ([]User, error) {
-	c := s.Session.DB("go-training-account").C("User")
 	var results []User
-	err := c.Find(nil).All(&results)
+	err := s.collection().Find(nil).All(&results)
 	if err != nil {
 		return nil, err
 	}
@@ -37,37 +40,29 @@ func (s *UserServiceImp) All() ([]User, error) {
 }
 
 func (s *UserServiceImp) Get(id int) (*User, error) {
-	c := s.Session.DB("go-training-account").C("User")
 	var result User
-	err := c.Find(bson.M{"id": id}).One(&result)
-
+	err := s.collection().Find(bson.M{"id": id}).One(&result)
 	return &result, err
 }
 
 func (s *UserServiceImp) New(u User) error {
-	c := s.Session.DB("go-training-account").C("User")
 	var result User
-	err := c.Find(nil).Sort("-id").One(&result)
+	err := s.collection().Find(nil).Sort("-id").One(&result)
 
 	if err != nil {
 		return err
 	}
 
 	u.ID = result.ID + 1
-
-	return c.Insert(u)
+	return s.collection().Insert(u)
 }
 
 func (s *UserServiceImp) Update(u User) (*User, error) {
-	c := s.Session.DB("go-training-account").C("User")
-	err := c.Update(bson.M{"id": u.ID}, u)
-
+	err := s.collection().Update(bson.M{"id": u.ID}, u)
 	return &u, err
 }
 
 func (s *UserServiceImp) Delete(id int) error {
-	c := s.Session.DB("go-training-account").C("User")
-	err := c.Remove(bson.M{"id": id})
-
+	err := s.collection().Remove(bson.M{"id": id})
 	return err
 }

@@ -23,6 +23,9 @@ func main() {
 		accountService: &account.AccountServiceImp{
 			Session: sess,
 		},
+		adminService: &AdminServiceImp{
+			Session: sess,
+		},
 	}
 
 	ge := setupRouter(r)

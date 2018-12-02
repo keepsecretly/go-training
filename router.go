@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-training/account"
 	"go-training/user"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -13,6 +14,7 @@ import (
 type Router struct {
 	userService    user.UserService
 	accountService account.AccountService
+	adminService   AdminService
 }
 
 func (r *Router) allUser(c *gin.Context) {
@@ -192,7 +194,9 @@ func (r *Router) addAccount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, account)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Successful",
+	})
 }
 
 func (r *Router) allAccounts(c *gin.Context) {
@@ -338,69 +342,55 @@ func (r *Router) withdraw(c *gin.Context) {
 }
 
 func (r *Router) transfer(c *gin.Context) {
-	h := map[string]string{}
+	var h struct {
+		From   *string `json:"from"`
+		To     *string `json:"to"`
+		Amount *int    `json:"amount"`
+	}
+
 	if err := c.ShouldBindJSON(&h); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, err)
-		return
-	}
-
-	if _, okAmount := h["amount"]; !okAmount {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"object":  "error",
-			"message": "amount not found",
-		})
-		return
-	}
-
-	amount, err := strconv.Atoi(h["amount"])
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
 			"message": fmt.Sprintf("error: %s", err),
 		})
 		return
 	}
 
-	if _, okFrom := h["from"]; !okFrom {
+	log.Printf("%#v\n", h)
+
+	amount := h.Amount
+	if amount == nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": "amount is nil",
+		})
+		return
+	}
+
+	from := h.From
+	if from == nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"object":  "error",
-			"message": "account not found",
+			"message": "from account not found",
 		})
 		return
 	}
 
-	from, err := strconv.Atoi(h["from"])
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"object":  "error",
-			"message": fmt.Sprintf("error: %s", err),
-		})
-		return
-	}
-
-	if _, okTo := h["to"]; !okTo {
+	to := h.To
+	if to == nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"object":  "error",
-			"message": "account not found",
+			"message": "to account not found",
 		})
 		return
 	}
 
-	to, err := strconv.Atoi(h["to"])
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"object":  "error",
-			"message": fmt.Sprintf("error: %s", err),
-		})
-		return
-	}
-
-	account, err := r.accountService.Transfer(from, to, amount)
+	account, err := r.accountService.Transfer(*from, *to, *amount)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"object":  "error",
-			"message": fmt.Sprintf("db: update error: %s", err),
+			"message": fmt.Sprintf("db: error: %s", err),
 		})
 		return
 	}
@@ -408,12 +398,51 @@ func (r *Router) transfer(c *gin.Context) {
 	c.JSON(http.StatusOK, account)
 }
 
+func (r *Router) genKey(c *gin.Context) {
+	key, err := r.adminService.New()
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"object":  "error",
+			"message": fmt.Sprintf("db: error: %s", err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, key)
+}
+
+func (r *Router) AuthRequest(c *gin.Context) {
+	user, _, ok := c.Request.BasicAuth()
+
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if err := r.adminService.ValidateKey(user); err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+}
+
 func setupRouter(r *Router) *gin.Engine {
 	g := gin.Default()
 
+	g.POST("/transfers", r.transfer)
+
 	u := g.Group("/users")
 	b := g.Group("/bankAccounts")
+	a := g.Group("/admin")
 
+	a.Use(gin.BasicAuth(gin.Accounts{
+		"admin": "1234",
+	}))
+
+	a.GET("/generateKey", r.genKey)
+
+	u.Use(r.AuthRequest)
 	u.GET("/", r.allUser)
 	u.POST("/", r.addUser)
 
@@ -425,6 +454,7 @@ func setupRouter(r *Router) *gin.Engine {
 	u.GET("/:id/bankAccounts/", r.allAccounts)
 	u.POST("/:id/bankAccounts/", r.addAccount)
 
+	b.Use(r.AuthRequest)
 	b.DELETE("/:id", r.deleteAccount)
 	b.PUT("/:id/deposit", r.deposit)
 	b.POST("/:id/deposit", r.deposit)
