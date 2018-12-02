@@ -356,8 +356,6 @@ func (r *Router) transfer(c *gin.Context) {
 		return
 	}
 
-	log.Printf("%#v\n", h)
-
 	amount := h.Amount
 	if amount == nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -434,17 +432,18 @@ func (r *Router) LogRequest(c *gin.Context) {
 func setupRouter(r *Router) *gin.Engine {
 	g := gin.Default()
 
-	g.POST("/transfers", r.transfer)
-
 	u := g.Group("/users")
 	b := g.Group("/bankAccounts")
 	a := g.Group("/admin")
 
 	a.Use(gin.BasicAuth(gin.Accounts{
 		"admin": "1234",
-	}))
+	})).Use(r.LogRequest)
 
 	a.GET("/generateKey", r.genKey)
+
+	g.Use(r.AuthRequest).Use(r.LogRequest)
+	g.POST("/transfers", r.transfer)
 
 	u.Use(r.AuthRequest).Use(r.LogRequest)
 	u.GET("/", r.allUser)

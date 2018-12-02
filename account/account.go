@@ -2,7 +2,6 @@ package account
 
 import (
 	"errors"
-	"log"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -137,8 +136,6 @@ func (s *AccountServiceImp) Transfer(fromID string, toID string, amount int) (*A
 	if err := s.collection().Find(bson.M{"account_number": fromID}).One(&fromAccount); err != nil {
 		return nil, err
 	}
-
-	log.Printf("%#v", fromAccount)
 
 	return &fromAccount, err
 }
